@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  input::placeholder{color:#5C5E66;}
+  ::-webkit-scrollbar{width:11px;height:11px;}
+  ::-webkit-scrollbar-thumb{background:#26282E;border-radius:8px;border:3px solid #0A0A0B;}
+  ::-webkit-scrollbar-thumb:hover{background:#34373E;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  @keyframes popIn{from{opacity:0;transform:translateY(6px) scale(.98);}to{opacity:1;transform:none;}}
+  @keyframes overlayIn{from{opacity:0;}to{opacity:1;}}
+  @keyframes toastIn{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
+</style>
+</helmet>
+<div style="position:fixed;inset:0;display:flex;flex-direction:column;background:#0A0A0B;color:#fff;font-family:Inter,'Segoe UI',system-ui,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;overflow:hidden;">
+
+  <!-- ===================== TOP TOOLBAR ===================== -->
+  <header style="display:flex;align-items:center;gap:16px;height:58px;padding:0 18px;background:#111114;border-bottom:1px solid #2A2C32;flex-shrink:0;">
+    <div style="display:flex;align-items:center;gap:11px;flex-shrink:0;">
+      <div style="width:28px;height:28px;border-radius:7px;background:#3EC6FF;display:flex;align-items:center;justify-content:center;color:#04121a;font-weight:800;font-size:15px;">A</div>
+      <div style="display:flex;flex-direction:column;line-height:1.1;">
+        <span style="font-weight:700;font-size:14px;letter-spacing:-0.01em;">Documents</span>
+        <span style="font-size:11px;color:#5C5E66;letter-spacing:0.02em;">AGGIA Workspace</span>
+      </div>
+    </div>
+
+    <div style="width:1px;height:26px;background:#2A2C32;flex-shrink:0;"></div>
+
+    <!-- search -->
+    <div style="position:relative;display:flex;align-items:center;flex-shrink:0;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#8A8C94" stroke-width="1.7" stroke-linecap="round" style="width:16px;height:16px;position:absolute;left:11px;pointer-events:none;"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input value="{{ searchValue }}" onInput="{{ onSearch }}" placeholder="Search all documents…" style="width:268px;height:36px;padding:0 12px 0 34px;background:#1F2126;border:1px solid #2A2C32;border-radius:8px;color:#fff;font-size:13.5px;font-family:inherit;" style-focus="border-color:#3EC6FF;box-shadow:0 0 0 3px rgba(62,198,255,0.12);" />
+    </div>
+
+    <div style="flex:1;"></div>
+
+    <button onClick="{{ openNewFolder }}" style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;background:#1F2126;border:1px solid #2A2C32;border-radius:8px;color:#fff;font-family:inherit;font-size:13.5px;font-weight:500;cursor:pointer;flex-shrink:0;" style-hover="background:#17181C;border-color:#3A3D44;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+      New folder
+    </button>
+    <button onClick="{{ openUpload }}" style="{{ uploadBtnStyle }}" style-hover="filter:brightness(1.08);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+      Upload
+    </button>
+  </header>
+
+  <!-- ===================== BODY ===================== -->
+  <div style="flex:1;display:flex;min-height:0;">
+
+    <!-- ===== SIDEBAR / TREE ===== -->
+    <aside style="width:286px;flex-shrink:0;background:#0C0C0E;border-right:1px solid #2A2C32;display:flex;flex-direction:column;min-height:0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:42px;padding:0 16px;flex-shrink:0;">
+        <span style="font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#8A8C94;">Folders</span>
+        <button onClick="{{ openNewFolder }}" title="New folder" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:6px;color:#8A8C94;cursor:pointer;" style-hover="background:#1F2126;color:#fff;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="width:15px;height:15px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:2px 8px 16px;">
+        <!-- All documents -->
+        <div onClick="{{ selectAll }}" style="{{ allRowStyle }}">
+          <span style="width:18px;flex-shrink:0;"></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="{{ allIconStyle }}"><rect x="3" y="4" width="18" height="5" rx="1.5"></rect><rect x="3" y="11" width="18" height="9" rx="1.5"></rect></svg>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">All documents</span>
+          <span style="{{ allCountStyle }}">{{ totalCount }}</span>
+        </div>
+
+        <sc-for list="{{ treeRows }}" as="node" hint-placeholder-count="8">
+          <div style="{{ node.rowStyle }}" onClick="{{ node.onSelect }}" onContextMenu="{{ node.onMenu }}">
+            <span onClick="{{ node.onToggle }}" style="width:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+              <sc-if value="{{ node.hasChildren }}" hint-placeholder-val="{{ true }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#8A8C94" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="{{ node.chevStyle }}"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </sc-if>
+            </span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="{{ node.folderStyle }}"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
+            <sc-if value="{{ node.isEditing }}" hint-placeholder-val="{{ false }}">
+              <input value="{{ editValue }}" onInput="{{ onEditInput }}" onKeyDown="{{ onEditKey }}" onBlur="{{ commitRename }}" onClick="{{ stop }}" ref="{{ focusRef }}" style="flex:1;min-width:0;height:24px;padding:0 6px;background:#0A0A0B;border:1px solid #3EC6FF;border-radius:5px;color:#fff;font-size:13px;font-family:inherit;" />
+            </sc-if>
+            <sc-if value="{{ node.notEditing }}" hint-placeholder-val="{{ true }}">
+              <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ node.name }}</span>
+            </sc-if>
+            <sc-if value="{{ node.showCount }}" hint-placeholder-val="{{ false }}">
+              <span style="{{ node.countStyle }}">{{ node.count }}</span>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN / TABLE ===== -->
+    <section style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:#0A0A0B;">
+
+      <!-- sub header: breadcrumb OR selection bar -->
+      <div style="display:flex;align-items:center;gap:10px;height:50px;padding:0 18px;border-bottom:1px solid #2A2C32;flex-shrink:0;">
+        <sc-if value="{{ browseMode }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:center;gap:4px;min-width:0;flex:1;">
+            <sc-for list="{{ crumbs }}" as="crumb" hint-placeholder-count="2">
+              <sc-if value="{{ crumb.notFirst }}" hint-placeholder-val="{{ false }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#5C5E66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </sc-if>
+              <span onClick="{{ crumb.onClick }}" style="{{ crumb.style }}" style-hover="color:#fff;">{{ crumb.name }}</span>
+            </sc-for>
+          </div>
+          <span style="font-size:12px;color:#5C5E66;flex-shrink:0;font-variant-numeric:tabular-nums;">{{ docCountLabel }}</span>
+        </sc-if>
+        <sc-if value="{{ selectionMode }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:12px;flex:1;">
+            <span style="font-size:13px;font-weight:600;color:#3EC6FF;">{{ selLabel }}</span>
+            <span style="width:1px;height:18px;background:#2A2C32;"></span>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <sc-if value="{{ canRename }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ bulkRename }}" style="display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px;background:transparent;border:1px solid #2A2C32;border-radius:7px;color:#B8BAC0;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;" style-hover="background:#17181C;color:#fff;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                  Rename
+                </button>
+              </sc-if>
+              <button onClick="{{ bulkMove }}" style="display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px;background:transparent;border:1px solid #2A2C32;border-radius:7px;color:#B8BAC0;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;" style-hover="background:#17181C;color:#fff;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="5 9 2 12 5 15"></polyline><polyline points="9 5 12 2 15 5"></polyline><polyline points="15 19 12 22 9 19"></polyline><polyline points="19 9 22 12 19 15"></polyline><line x1="2" y1="12" x2="22" y2="12"></line><line x1="12" y1="2" x2="12" y2="22"></line></svg>
+                Move
+              </button>
+              <button onClick="{{ bulkDownload }}" style="display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px;background:transparent;border:1px solid #2A2C32;border-radius:7px;color:#B8BAC0;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;" style-hover="background:#17181C;color:#fff;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Download
+              </button>
+              <button onClick="{{ bulkDelete }}" style="display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px;background:rgba(240,74,74,0.1);border:1px solid rgba(240,74,74,0.3);border-radius:7px;color:#F04A4A;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;" style-hover="background:rgba(240,74,74,0.18);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Delete
+              </button>
+            </div>
+          </div>
+          <button onClick="{{ clearSelection }}" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:7px;color:#8A8C94;cursor:pointer;flex-shrink:0;" style-hover="background:#17181C;color:#fff;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="width:16px;height:16px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </sc-if>
+      </div>
+
+      <!-- table -->
+      <div style="flex:1;overflow:auto;min-height:0;">
+        <!-- table header -->
+        <div style="display:grid;grid-template-columns:34px minmax(180px,1fr) 64px 84px 120px 108px 104px 38px;align-items:center;column-gap:8px;padding:0 12px;height:38px;min-width:788px;border-bottom:1px solid #2A2C32;position:sticky;top:0;background:#0A0A0B;z-index:2;">
+          <div style="display:flex;align-items:center;justify-content:center;cursor:pointer;" onClick="{{ toggleAll }}">
+            <div style="{{ headCbStyle }}">
+              <sc-if value="{{ allSelected }}" hint-placeholder-val="{{ false }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#04121a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </sc-if>
+            </div>
+          </div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#8A8C94;">Name</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#8A8C94;">Type</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#8A8C94;">Size</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#8A8C94;">Owner</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#8A8C94;">Modified</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#8A8C94;">Status</div>
+          <div></div>
+        </div>
+
+        <!-- rows -->
+        <sc-for list="{{ rows }}" as="doc" hint-placeholder-count="7">
+          <div style="{{ doc.rowStyle }}" onClick="{{ doc.onRowClick }}" onContextMenu="{{ doc.onMenu }}">
+            <div style="display:flex;align-items:center;justify-content:center;" onClick="{{ doc.onCheck }}">
+              <div style="{{ doc.cbStyle }}">
+                <sc-if value="{{ doc.selected }}" hint-placeholder-val="{{ false }}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#04121a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </sc-if>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:11px;min-width:0;">
+              <div style="{{ doc.chipStyle }}">{{ doc.ext }}</div>
+              <sc-if value="{{ doc.isEditing }}" hint-placeholder-val="{{ false }}">
+                <input value="{{ editValue }}" onInput="{{ onEditInput }}" onKeyDown="{{ onEditKey }}" onBlur="{{ commitRename }}" onClick="{{ stop }}" ref="{{ focusRef }}" style="flex:1;min-width:0;height:26px;padding:0 7px;background:#0A0A0B;border:1px solid #3EC6FF;border-radius:6px;color:#fff;font-size:13.5px;font-family:inherit;" />
+              </sc-if>
+              <sc-if value="{{ doc.notEditing }}" hint-placeholder-val="{{ true }}">
+                <span style="{{ doc.nameStyle }}">{{ doc.name }}</span>
+              </sc-if>
+            </div>
+            <div style="font-size:12.5px;color:#8A8C94;">{{ doc.typeLabel }}</div>
+            <div style="font-size:12.5px;color:#8A8C94;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">{{ doc.sizeLabel }}</div>
+            <div style="font-size:13px;color:#B8BAC0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ doc.owner }}</div>
+            <div style="font-size:13px;color:#8A8C94;white-space:nowrap;">{{ doc.modified }}</div>
+            <div><span style="{{ doc.statusStyle }}">{{ doc.statusLabel }}</span></div>
+            <div style="display:flex;align-items:center;justify-content:center;">
+              <button onClick="{{ doc.onMenu }}" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:6px;color:#8A8C94;cursor:pointer;" style-hover="background:#1F2126;color:#fff;">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg>
+              </button>
+            </div>
+          </div>
+        </sc-for>
+
+        <sc-if value="{{ emptyState }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:90px 20px;text-align:center;">
+            <div style="width:54px;height:54px;border-radius:14px;background:#111114;border:1px solid #2A2C32;display:flex;align-items:center;justify-content:center;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#5C5E66" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
+            </div>
+            <div style="font-size:15px;font-weight:600;color:#B8BAC0;">{{ emptyTitle }}</div>
+            <div style="font-size:13px;color:#5C5E66;max-width:300px;line-height:1.5;">{{ emptySub }}</div>
+            <button onClick="{{ openUpload }}" style="margin-top:4px;display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;background:#1F2126;border:1px solid #2A2C32;border-radius:8px;color:#fff;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;" style-hover="background:#17181C;border-color:#3A3D44;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Upload a document
+            </button>
+          </div>
+        </sc-if>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===================== CONTEXT MENU ===================== -->
+  <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ menuStyle }}">
+      <sc-for list="{{ menuItems }}" as="mi" hint-placeholder-count="3">
+        <sc-if value="{{ mi.isDivider }}" hint-placeholder-val="{{ false }}">
+          <div style="height:1px;background:#2A2C32;margin:5px 6px;"></div>
+        </sc-if>
+        <sc-if value="{{ mi.notDivider }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ mi.onClick }}" style="{{ mi.style }}" style-hover="background:#1F2126;">{{ mi.label }}</button>
+        </sc-if>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <!-- ===================== MODAL ===================== -->
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:200;animation:overlayIn 160ms ease;">
+      <div onClick="{{ stop }}" style="width:440px;max-width:calc(100vw - 32px);background:#17181C;border:1px solid #2A2C32;border-radius:14px;box-shadow:0 2px 6px rgba(0,0,0,0.6),0 24px 70px rgba(0,0,0,0.6);padding:24px;animation:popIn 200ms cubic-bezier(0.16,1,0.3,1);">
+        <div style="font-size:17px;font-weight:700;letter-spacing:-0.01em;margin-bottom:6px;">{{ modalTitle }}</div>
+        <div style="font-size:13px;color:#8A8C94;line-height:1.5;margin-bottom:18px;">{{ modalSub }}</div>
+
+        <!-- new folder / rename / upload share a text input -->
+        <sc-if value="{{ modalHasInput }}" hint-placeholder-val="{{ false }}">
+          <input value="{{ modalValue }}" onInput="{{ onModalInput }}" onKeyDown="{{ onModalKey }}" ref="{{ focusRef }}" placeholder="{{ modalPlaceholder }}" style="width:100%;height:40px;padding:0 13px;background:#0A0A0B;border:1px solid #2A2C32;border-radius:9px;color:#fff;font-size:14px;font-family:inherit;margin-bottom:18px;" style-focus="border-color:#3EC6FF;box-shadow:0 0 0 3px rgba(62,198,255,0.12);" />
+        </sc-if>
+
+        <!-- upload type picker -->
+        <sc-if value="{{ modalIsUpload }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#8A8C94;margin-bottom:9px;">File type</div>
+          <div style="display:flex;gap:8px;margin-bottom:18px;">
+            <sc-for list="{{ uploadTypes }}" as="ut" hint-placeholder-count="5">
+              <button onClick="{{ ut.onClick }}" style="{{ ut.style }}">{{ ut.label }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- move destination picker -->
+        <sc-if value="{{ modalIsMove }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#8A8C94;margin-bottom:9px;">Destination</div>
+          <div style="max-height:230px;overflow-y:auto;border:1px solid #2A2C32;border-radius:9px;padding:6px;margin-bottom:18px;background:#0A0A0B;">
+            <sc-for list="{{ moveFolders }}" as="mf" hint-placeholder-count="6">
+              <button onClick="{{ mf.onClick }}" style="{{ mf.style }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;flex-shrink:0;opacity:0.85;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
+                <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;">{{ mf.name }}</span>
+                <sc-if value="{{ mf.selected }}" hint-placeholder-val="{{ false }}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#3EC6FF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;flex-shrink:0;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </sc-if>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button onClick="{{ closeModal }}" style="height:38px;padding:0 16px;background:transparent;border:1px solid #2A2C32;border-radius:9px;color:#B8BAC0;font-family:inherit;font-size:13.5px;font-weight:500;cursor:pointer;" style-hover="background:#1F2126;color:#fff;">Cancel</button>
+          <button onClick="{{ modalConfirm }}" style="{{ modalConfirmStyle }}" style-hover="filter:brightness(1.08);">{{ modalConfirmLabel }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===================== TOAST ===================== -->
+  <sc-if value="{{ toastOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;bottom:26px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:#1F2126;border:1px solid #3A3D44;border-radius:10px;padding:11px 16px;box-shadow:0 2px 6px rgba(0,0,0,0.6),0 20px 60px rgba(0,0,0,0.55);font-size:13.5px;font-weight:500;color:#fff;z-index:300;animation:toastIn 220ms cubic-bezier(0.16,1,0.3,1);">
+      <span style="width:18px;height:18px;border-radius:50%;background:rgba(74,222,128,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </span>
+      {{ toastMsg }}
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:820},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#3EC6FF&quot;,&quot;options&quot;:[&quot;#3EC6FF&quot;,&quot;#F2A23A&quot;,&quot;#4ADE80&quot;,&quot;#A78BFA&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;comfortable&quot;,&quot;options&quot;:[&quot;comfortable&quot;,&quot;compact&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;zebra&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = {
+    folders: [
+      { id: 'f1', name: 'Projects', parentId: null },
+      { id: 'f2', name: 'Apollo CRM Migration', parentId: 'f1' },
+      { id: 'f3', name: 'Contracts', parentId: 'f2' },
+      { id: 'f4', name: 'Design Assets', parentId: 'f2' },
+      { id: 'f5', name: 'Orion ERP Rollout', parentId: 'f1' },
+      { id: 'f6', name: 'Specifications', parentId: 'f5' },
+      { id: 'f7', name: 'Tickets', parentId: null },
+      { id: 'f8', name: 'Open', parentId: 'f7' },
+      { id: 'f9', name: 'Resolved', parentId: 'f7' },
+      { id: 'f10', name: 'Shared', parentId: null },
+    ],
+    docs: [
+      { id: 'd1', name: 'Apollo_MSA_v3.pdf', type: 'PDF', size: '2.4 MB', owner: 'Anna K.', modified: 'Jun 18, 2026', status: 'Approved', folderId: 'f3' },
+      { id: 'd2', name: 'NDA_Signed.pdf', type: 'PDF', size: '880 KB', owner: 'Marek W.', modified: 'Jun 12, 2026', status: 'Final', folderId: 'f3' },
+      { id: 'd3', name: 'Pricing_Matrix.xlsx', type: 'XLSX', size: '1.1 MB', owner: 'Anna K.', modified: 'Jun 20, 2026', status: 'In review', folderId: 'f3' },
+      { id: 'd4', name: 'Dashboard_Mockup.png', type: 'PNG', size: '4.6 MB', owner: 'Ola P.', modified: 'Jun 21, 2026', status: 'In review', folderId: 'f4' },
+      { id: 'd5', name: 'Logo_Export.jpg', type: 'JPG', size: '1.8 MB', owner: 'Ola P.', modified: 'May 30, 2026', status: 'Final', folderId: 'f4' },
+      { id: 'd6', name: 'Component_Specs.docx', type: 'DOCX', size: '540 KB', owner: 'Ola P.', modified: 'Jun 22, 2026', status: 'Draft', folderId: 'f4' },
+      { id: 'd7', name: 'ERP_Requirements.docx', type: 'DOCX', size: '1.3 MB', owner: 'Tomek R.', modified: 'Jun 09, 2026', status: 'Approved', folderId: 'f6' },
+      { id: 'd8', name: 'Integration_Map.pdf', type: 'PDF', size: '3.2 MB', owner: 'Tomek R.', modified: 'Jun 19, 2026', status: 'In review', folderId: 'f6' },
+      { id: 'd9', name: 'Migration_Plan.xlsx', type: 'XLSX', size: '760 KB', owner: 'Tomek R.', modified: 'Jun 23, 2026', status: 'Draft', folderId: 'f6' },
+      { id: 'd10', name: 'Kickoff_Notes.docx', type: 'DOCX', size: '320 KB', owner: 'Tomek R.', modified: 'May 22, 2026', status: 'Final', folderId: 'f5' },
+      { id: 'd11', name: 'Portfolio_Overview.xlsx', type: 'XLSX', size: '1.5 MB', owner: 'Anna K.', modified: 'Jun 10, 2026', status: 'Approved', folderId: 'f1' },
+      { id: 'd12', name: 'TICKET-4821_Screenshot.png', type: 'PNG', size: '920 KB', owner: 'You', modified: 'Jun 23, 2026', status: 'Draft', folderId: 'f8' },
+      { id: 'd13', name: 'TICKET-4790_Log.docx', type: 'DOCX', size: '210 KB', owner: 'Dawid S.', modified: 'Jun 22, 2026', status: 'In review', folderId: 'f8' },
+      { id: 'd14', name: 'TICKET-4655_Report.pdf', type: 'PDF', size: '1.0 MB', owner: 'Dawid S.', modified: 'Jun 05, 2026', status: 'Archived', folderId: 'f9' },
+      { id: 'd15', name: 'Onboarding_Guide.pdf', type: 'PDF', size: '2.0 MB', owner: 'HR Team', modified: 'Apr 15, 2026', status: 'Final', folderId: 'f10' },
+      { id: 'd16', name: 'Brand_Guidelines.pdf', type: 'PDF', size: '5.4 MB', owner: 'Ola P.', modified: 'Mar 28, 2026', status: 'Approved', folderId: 'f10' },
+      { id: 'd17', name: 'Q2_Roadmap.xlsx', type: 'XLSX', size: '680 KB', owner: 'Anna K.', modified: 'Jun 16, 2026', status: 'In review', folderId: 'f10' },
+    ],
+    expanded: new Set(['f1', 'f2', 'f7']),
+    selectedFolder: 'all',
+    selectedDocs: new Set(),
+    search: '',
+    editing: null,
+    editValue: '',
+    menu: null,
+    modal: null,
+    modalValue: '',
+    modalType: 'PDF',
+    modalDest: '__none__',
+    toast: null,
+    seq: 100,
+  };
+
+  componentDidMount() {
+    this._onWin = () => { if (this.state.menu) this.setState({ menu: null }); };
+    this._onKey = (e) => {
+      if (e.key === 'Escape') this.setState({ menu: null, modal: null, editing: null });
+    };
+    window.addEventListener('mousedown', this._onWin);
+    window.addEventListener('keydown', this._onKey);
+    this.focusRef = (el) => {
+      if (el && document.activeElement !== el) { el.focus(); if (el.select) el.select(); }
+    };
+    this.stop = (e) => e.stopPropagation();
+  }
+  componentWillUnmount() {
+    window.removeEventListener('mousedown', this._onWin);
+    window.removeEventListener('keydown', this._onKey);
+    clearTimeout(this._toastT);
+  }
+
+  hexA(hex, a) {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  showToast(msg) {
+    clearTimeout(this._toastT);
+    this.setState({ toast: msg });
+    this._toastT = setTimeout(() => this.setState({ toast: null }), 2400);
+  }
+
+  childrenOf(id) { return this.state.folders.filter(f => f.parentId === id); }
+  hasChildren(id) { return this.state.folders.some(f => f.parentId === id); }
+  docCount(id) { return this.state.docs.filter(d => d.folderId === id).length; }
+
+  pathOf(id) {
+    const out = [];
+    let cur = this.state.folders.find(f => f.id === id);
+    while (cur) { out.unshift(cur); cur = this.state.folders.find(f => f.id === cur.parentId); }
+    return out;
+  }
+
+  descendantIds(id) {
+    const set = new Set([id]);
+    let added = true;
+    while (added) {
+      added = false;
+      this.state.folders.forEach(f => {
+        if (set.has(f.parentId) && !set.has(f.id)) { set.add(f.id); added = true; }
+      });
+    }
+    return set;
+  }
+
+  // ---- tree / folder actions ----
+  toggleExpand(id) {
+    const s = new Set(this.state.expanded);
+    s.has(id) ? s.delete(id) : s.add(id);
+    this.setState({ expanded: s });
+  }
+  selectFolder(id) { this.setState({ selectedFolder: id, selectedDocs: new Set(), search: '', editing: null }); }
+
+  openMenu(e, kind, id) {
+    e.preventDefault(); e.stopPropagation();
+    let sel = this.state.selectedDocs;
+    if (kind === 'doc' && !sel.has(id)) sel = new Set([id]);
+    const PAD = 8, MW = 196, MH = 230;
+    const x = Math.min(e.clientX, window.innerWidth - MW - PAD);
+    const y = Math.min(e.clientY, window.innerHeight - MH - PAD);
+    this.setState({ menu: { x, y, kind, id }, selectedDocs: sel });
+  }
+
+  // ---- rename ----
+  startRename(kind, id) {
+    const item = kind === 'folder' ? this.state.folders.find(f => f.id === id) : this.state.docs.find(d => d.id === id);
+    this.setState({ editing: { kind, id }, editValue: item ? item.name : '', menu: null });
+  }
+  commitRename() {
+    const ed = this.state.editing;
+    if (!ed) return;
+    const v = this.state.editValue.trim();
+    if (v) {
+      if (ed.kind === 'folder') {
+        this.setState({ folders: this.state.folders.map(f => f.id === ed.id ? { ...f, name: v } : f), editing: null });
+      } else {
+        this.setState({ docs: this.state.docs.map(d => d.id === ed.id ? { ...d, name: v } : d), editing: null });
+      }
+      this.showToast('Renamed');
+    } else {
+      this.setState({ editing: null });
+    }
+  }
+
+  // ---- doc selection ----
+  toggleDoc(id) {
+    const s = new Set(this.state.selectedDocs);
+    s.has(id) ? s.delete(id) : s.add(id);
+    this.setState({ selectedDocs: s });
+  }
+  selectOnlyDoc(id) { this.setState({ selectedDocs: new Set([id]) }); }
+  toggleAll() {
+    const vis = this.visibleDocs().map(d => d.id);
+    const allSel = vis.length > 0 && vis.every(id => this.state.selectedDocs.has(id));
+    this.setState({ selectedDocs: new Set(allSel ? [] : vis) });
+  }
+  clearSelection() { this.setState({ selectedDocs: new Set() }); }
+
+  visibleDocs() {
+    const q = this.state.search.trim().toLowerCase();
+    if (q) return this.state.docs.filter(d => d.name.toLowerCase().includes(q));
+    if (this.state.selectedFolder === 'all') return this.state.docs;
+    return this.state.docs.filter(d => d.folderId === this.state.selectedFolder);
+  }
+
+  // ---- modals ----
+  openNewFolder() { this.setState({ modal: { kind: 'newFolder' }, modalValue: '', menu: null }); }
+  openNewSubfolder(parentId) {
+    const s = new Set(this.state.expanded); s.add(parentId);
+    this.setState({ modal: { kind: 'newFolder', parentId }, modalValue: '', menu: null, expanded: s, selectedFolder: parentId });
+  }
+  openUpload() { this.setState({ modal: { kind: 'upload' }, modalValue: '', modalType: 'PDF', menu: null }); }
+  openMoveDocs(ids) { this.setState({ modal: { kind: 'move', target: 'docs', ids: [...ids] }, modalDest: '__none__', menu: null }); }
+  openMoveFolder(id) { this.setState({ modal: { kind: 'move', target: 'folder', id }, modalDest: '__none__', menu: null }); }
+  openDeleteDocs(ids) { this.setState({ modal: { kind: 'delete', target: 'docs', ids: [...ids] }, menu: null }); }
+  openDeleteFolder(id) { this.setState({ modal: { kind: 'delete', target: 'folder', id }, menu: null }); }
+  closeModal() { this.setState({ modal: null }); }
+
+  confirmModal() {
+    const m = this.state.modal;
+    if (!m) return;
+    if (m.kind === 'newFolder') {
+      const v = this.state.modalValue.trim();
+      if (!v) return;
+      const id = 'f' + (this.state.seq + 1);
+      const parent = m.parentId !== undefined ? m.parentId : (this.state.selectedFolder === 'all' ? null : this.state.selectedFolder);
+      const exp = new Set(this.state.expanded); if (parent) exp.add(parent);
+      this.setState({ folders: [...this.state.folders, { id, name: v, parentId: parent }], seq: this.state.seq + 1, modal: null, expanded: exp });
+      this.showToast('Folder created');
+    } else if (m.kind === 'upload') {
+      const raw = this.state.modalValue.trim();
+      if (!raw) return;
+      const ext = this.state.modalType;
+      const dot = '.' + ext.toLowerCase();
+      const name = raw.toLowerCase().endsWith(dot) ? raw : raw + dot;
+      const kb = 80 + Math.floor(Math.random() * 4800);
+      const size = kb >= 1000 ? (kb / 1000).toFixed(1) + ' MB' : kb + ' KB';
+      const folderId = this.state.selectedFolder === 'all' ? 'f10' : this.state.selectedFolder;
+      const id = 'd' + (this.state.seq + 1);
+      this.setState({ docs: [{ id, name, type: ext, size, owner: 'You', modified: 'Just now', status: 'Draft', folderId }, ...this.state.docs], seq: this.state.seq + 1, modal: null });
+      this.showToast('Document uploaded');
+    } else if (m.kind === 'move') {
+      const dest = this.state.modalDest;
+      if (dest === '__none__') return;
+      const destId = dest === '__root__' ? null : dest;
+      if (m.target === 'docs') {
+        const ids = new Set(m.ids);
+        this.setState({ docs: this.state.docs.map(d => ids.has(d.id) ? { ...d, folderId: destId === null ? 'f10' : destId } : d), modal: null, selectedDocs: new Set() });
+        this.showToast(m.ids.length + ' moved');
+      } else {
+        if (destId && this.descendantIds(m.id).has(destId)) { this.showToast("Can't move into itself"); return; }
+        this.setState({ folders: this.state.folders.map(f => f.id === m.id ? { ...f, parentId: destId } : f), modal: null });
+        this.showToast('Folder moved');
+      }
+    } else if (m.kind === 'delete') {
+      if (m.target === 'docs') {
+        const ids = new Set(m.ids);
+        this.setState({ docs: this.state.docs.filter(d => !ids.has(d.id)), modal: null, selectedDocs: new Set() });
+        this.showToast(m.ids.length + ' deleted');
+      } else {
+        const rm = this.descendantIds(m.id);
+        const newSelected = rm.has(this.state.selectedFolder) ? 'all' : this.state.selectedFolder;
+        this.setState({
+          folders: this.state.folders.filter(f => !rm.has(f.id)),
+          docs: this.state.docs.filter(d => !rm.has(d.folderId)),
+          modal: null, selectedFolder: newSelected,
+        });
+        this.showToast('Folder deleted');
+      }
+    }
+  }
+
+  download() { this.showToast('Download started'); this.setState({ menu: null }); }
+
+  typeMeta(type) {
+    const map = {
+      PDF: '#F04A4A', DOCX: '#3EC6FF', XLSX: '#4ADE80', JPG: '#F2A23A', PNG: '#A78BFA',
+    };
+    const c = map[type] || '#8A8C94';
+    return { color: c, bg: this.hexA(c, 0.14) };
+  }
+  statusMeta(s) {
+    const map = {
+      'Draft': '#8A8C94', 'In review': '#F2A23A', 'Approved': '#3EC6FF', 'Final': '#4ADE80', 'Archived': '#5C5E66',
+    };
+    const c = map[s] || '#8A8C94';
+    return { color: c, bg: this.hexA(c, 0.13) };
+  }
+
+  renderVals() {
+    const st = this.state;
+    const accent = this.props.accent || '#3EC6FF';
+    const accentSoft = this.hexA(accent, 0.13);
+    const density = this.props.density || 'comfortable';
+    const zebra = !!this.props.zebra;
+    const padY = density === 'compact' ? '7px' : '11px';
+
+    const editing = st.editing;
+    const editKind = editing ? editing.kind : null;
+    const editId = editing ? editing.id : null;
+
+    // ---- breadcrumbs ----
+    const crumbs = [];
+    const pushCrumb = (name, id, isLast) => crumbs.push({
+      name, notFirst: crumbs.length > 0,
+      onClick: isLast ? (() => {}) : (() => this.selectFolder(id)),
+      style: { fontSize: '13px', fontWeight: isLast ? 600 : 500, color: isLast ? '#fff' : '#8A8C94', cursor: isLast ? 'default' : 'pointer', whiteSpace: 'nowrap', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis' },
+    });
+    if (st.search.trim()) {
+      pushCrumb('Search results', 'all', true);
+    } else if (st.selectedFolder === 'all') {
+      pushCrumb('All documents', 'all', true);
+    } else {
+      pushCrumb('All documents', 'all', false);
+      const path = this.pathOf(st.selectedFolder);
+      path.forEach((f, i) => pushCrumb(f.name, f.id, i === path.length - 1));
+    }
+
+    // ---- tree rows (flattened visible) ----
+    const treeRows = [];
+    const walk = (parentId, depth) => {
+      this.childrenOf(parentId).forEach(f => {
+        const hasKids = this.hasChildren(f.id);
+        const expanded = st.expanded.has(f.id);
+        const selected = st.selectedFolder === f.id;
+        const count = this.docCount(f.id);
+        treeRows.push({
+          id: f.id, name: f.name, depth, hasChildren: hasKids, count, showCount: count > 0 && !(editKind === 'folder' && editId === f.id),
+          isEditing: editKind === 'folder' && editId === f.id,
+          notEditing: !(editKind === 'folder' && editId === f.id),
+          rowStyle: {
+            display: 'flex', alignItems: 'center', gap: '6px',
+            padding: '6px 8px', paddingLeft: (8 + depth * 16) + 'px',
+            borderRadius: '8px', cursor: 'pointer', userSelect: 'none',
+            fontSize: '13.5px', fontWeight: 500, marginBottom: '1px',
+            color: selected ? '#fff' : '#B8BAC0',
+            background: selected ? accentSoft : 'transparent',
+            boxShadow: selected ? ('inset 2px 0 0 ' + accent) : 'none',
+          },
+          chevStyle: { width: '13px', height: '13px', transition: 'transform 150ms ease', transform: expanded ? 'rotate(90deg)' : 'none' },
+          folderStyle: { width: '16px', height: '16px', flexShrink: 0, color: selected ? accent : '#8A8C94' },
+          countStyle: { marginLeft: 'auto', fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: selected ? accent : '#5C5E66', flexShrink: 0 },
+          onToggle: (e) => { e.stopPropagation(); this.toggleExpand(f.id); },
+          onSelect: () => this.selectFolder(f.id),
+          onMenu: (e) => this.openMenu(e, 'folder', f.id),
+        });
+        if (expanded) walk(f.id, depth + 1);
+      });
+    };
+    walk(null, 0);
+
+    // ---- table rows ----
+    const visible = this.visibleDocs();
+    const rows = visible.map((d, idx) => {
+      const tm = this.typeMeta(d.type);
+      const sm = this.statusMeta(d.status);
+      const selected = st.selectedDocs.has(d.id);
+      const isEd = editKind === 'doc' && editId === d.id;
+      return {
+        id: d.id, name: d.name, ext: d.type, typeLabel: d.type, sizeLabel: d.size, owner: d.owner, modified: d.modified, statusLabel: d.status,
+        selected, isEditing: isEd, notEditing: !isEd,
+        rowStyle: {
+          display: 'grid', gridTemplateColumns: '34px minmax(180px,1fr) 64px 84px 120px 108px 104px 38px',
+          alignItems: 'center', columnGap: '8px', padding: padY + ' 12px', minWidth: '788px',
+          borderBottom: '1px solid #18191D', cursor: 'pointer', userSelect: 'none',
+          background: selected ? accentSoft : (zebra && idx % 2 === 1 ? '#0D0D10' : 'transparent'),
+          boxShadow: selected ? ('inset 2px 0 0 ' + accent) : 'none',
+        },
+        nameStyle: { fontSize: '13.5px', fontWeight: 500, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+        chipStyle: { width: '34px', height: '24px', flexShrink: 0, borderRadius: '6px', background: tm.bg, color: tm.color, fontSize: '9.5px', fontWeight: 700, letterSpacing: '0.03em', fontFamily: "'JetBrains Mono',monospace", display: 'flex', alignItems: 'center', justifyContent: 'center' },
+        statusStyle: { display: 'inline-flex', alignItems: 'center', height: '22px', padding: '0 9px', borderRadius: '999px', background: sm.bg, color: sm.color, fontSize: '11.5px', fontWeight: 600, whiteSpace: 'nowrap' },
+        cbStyle: {
+          width: '17px', height: '17px', borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          border: selected ? ('1px solid ' + accent) : '1px solid #3A3D44',
+          background: selected ? accent : 'transparent',
+        },
+        onRowClick: () => this.selectOnlyDoc(d.id),
+        onCheck: (e) => { e.stopPropagation(); this.toggleDoc(d.id); },
+        onMenu: (e) => this.openMenu(e, 'doc', d.id),
+      };
+    });
+
+    const visIds = visible.map(d => d.id);
+    const allSelected = visIds.length > 0 && visIds.every(id => st.selectedDocs.has(id));
+    const selCount = st.selectedDocs.size;
+
+    // ---- context menu ----
+    let menuItems = [];
+    let menuStyle = {};
+    if (st.menu) {
+      menuStyle = {
+        position: 'fixed', left: st.menu.x + 'px', top: st.menu.y + 'px',
+        minWidth: '196px', background: '#17181C', border: '1px solid #2A2C32', borderRadius: '11px',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.6),0 20px 60px rgba(0,0,0,0.55)', padding: '6px', zIndex: 250,
+        animation: 'popIn 150ms cubic-bezier(0.16,1,0.3,1)',
+      };
+      const baseItem = { display: 'flex', alignItems: 'center', width: '100%', padding: '8px 11px', background: 'transparent', border: 'none', borderRadius: '7px', color: '#E6E7EA', fontFamily: 'inherit', fontSize: '13px', fontWeight: 500, cursor: 'pointer', textAlign: 'left' };
+      const dangerItem = { ...baseItem, color: '#F04A4A' };
+      const mk = (label, onClick, danger) => ({ label, onClick, style: danger ? dangerItem : baseItem, isDivider: false, notDivider: true });
+      const div = () => ({ isDivider: true, notDivider: false, label: '', style: {} });
+      if (st.menu.kind === 'folder') {
+        const fid = st.menu.id;
+        menuItems = [
+          mk('New subfolder', () => this.openNewSubfolder(fid)),
+          mk('Rename', () => this.startRename('folder', fid)),
+          mk('Move to…', () => this.openMoveFolder(fid)),
+          div(),
+          mk('Delete folder', () => this.openDeleteFolder(fid), true),
+        ];
+      } else {
+        const ids = selCount > 1 ? [...st.selectedDocs] : [st.menu.id];
+        const suffix = ids.length > 1 ? (' (' + ids.length + ')') : '';
+        menuItems = [
+          ids.length === 1 ? mk('Rename', () => this.startRename('doc', ids[0])) : null,
+          mk('Download' + suffix, () => this.download()),
+          mk('Move to…' + suffix, () => this.openMoveDocs(ids)),
+          div(),
+          mk('Delete' + suffix, () => this.openDeleteDocs(ids), true),
+        ].filter(Boolean);
+      }
+    }
+
+    // ---- modal ----
+    const m = st.modal;
+    let modalTitle = '', modalSub = '', modalConfirmLabel = 'Confirm', modalDanger = false;
+    let modalHasInput = false, modalIsUpload = false, modalIsMove = false, modalPlaceholder = '';
+    let uploadTypes = [], moveFolders = [];
+    if (m) {
+      if (m.kind === 'newFolder') {
+        modalTitle = 'New folder'; modalConfirmLabel = 'Create folder'; modalHasInput = true; modalPlaceholder = 'Folder name';
+        const where = m.parentId !== undefined && m.parentId ? (this.state.folders.find(f => f.id === m.parentId) || {}).name : (st.selectedFolder !== 'all' ? (this.state.folders.find(f => f.id === st.selectedFolder) || {}).name : null);
+        modalSub = where ? ('Inside “' + where + '”') : 'At the top level';
+      } else if (m.kind === 'upload') {
+        modalTitle = 'Upload document'; modalConfirmLabel = 'Upload'; modalHasInput = true; modalIsUpload = true; modalPlaceholder = 'File name';
+        const dest = st.selectedFolder === 'all' ? 'Shared' : (this.state.folders.find(f => f.id === st.selectedFolder) || {}).name;
+        modalSub = 'Will be added to “' + dest + '”';
+        uploadTypes = ['PDF', 'DOCX', 'XLSX', 'JPG', 'PNG'].map(t => {
+          const sel = st.modalType === t;
+          const tm = this.typeMeta(t);
+          return {
+            label: t, onClick: () => this.setState({ modalType: t }),
+            style: { flex: 1, height: '36px', borderRadius: '8px', fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', fontWeight: 700, cursor: 'pointer', border: sel ? ('1px solid ' + tm.color) : '1px solid #2A2C32', background: sel ? tm.bg : 'transparent', color: sel ? tm.color : '#8A8C94' },
+          };
+        });
+      } else if (m.kind === 'move') {
+        const n = m.target === 'docs' ? m.ids.length : 1;
+        modalTitle = m.target === 'docs' ? ('Move ' + n + (n > 1 ? ' documents' : ' document')) : 'Move folder';
+        modalSub = 'Choose a destination folder'; modalConfirmLabel = 'Move here'; modalIsMove = true;
+        const excluded = m.target === 'folder' ? this.descendantIds(m.id) : new Set();
+        const opts = [{ id: '__root__', name: 'Top level', depth: 0 }];
+        const walkM = (pid, depth) => {
+          this.childrenOf(pid).forEach(f => {
+            if (!excluded.has(f.id)) { opts.push({ id: f.id, name: f.name, depth }); walkM(f.id, depth + 1); }
+          });
+        };
+        walkM(null, 0);
+        moveFolders = opts.map(o => {
+          const sel = st.modalDest === o.id;
+          return {
+            name: o.name, selected: sel, onClick: () => this.setState({ modalDest: o.id }),
+            style: { display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 10px', paddingLeft: (10 + o.depth * 14) + 'px', background: sel ? accentSoft : 'transparent', border: 'none', borderRadius: '7px', color: sel ? '#fff' : '#B8BAC0', fontFamily: 'inherit', fontSize: '13px', fontWeight: 500, cursor: 'pointer', marginBottom: '1px' },
+          };
+        });
+      } else if (m.kind === 'delete') {
+        modalDanger = true; modalConfirmLabel = 'Delete';
+        if (m.target === 'docs') {
+          const n = m.ids.length;
+          modalTitle = 'Delete ' + n + (n > 1 ? ' documents?' : ' document?');
+          modalSub = 'This action cannot be undone. ' + (n > 1 ? 'These files' : 'This file') + ' will be permanently removed.';
+        } else {
+          const f = this.state.folders.find(x => x.id === m.id) || {};
+          const rm = this.descendantIds(m.id);
+          const docN = this.state.docs.filter(d => rm.has(d.folderId)).length;
+          modalTitle = 'Delete “' + f.name + '”?';
+          modalSub = 'This folder' + (rm.size > 1 ? ', its subfolders,' : '') + (docN ? (' and ' + docN + ' document' + (docN > 1 ? 's' : '')) : '') + ' will be permanently removed.';
+        }
+      }
+    }
+    const modalConfirmStyle = {
+      height: '38px', padding: '0 18px', borderRadius: '9px', border: 'none', fontFamily: 'inherit', fontSize: '13.5px', fontWeight: 600, cursor: 'pointer',
+      background: modalDanger ? '#F04A4A' : accent, color: modalDanger ? '#fff' : '#04121a',
+    };
+
+    return {
+      // toolbar
+      searchValue: st.search,
+      onSearch: (e) => this.setState({ search: e.target.value, selectedDocs: new Set() }),
+      openNewFolder: () => this.openNewFolder(),
+      openUpload: () => this.openUpload(),
+      uploadBtnStyle: { display: 'inline-flex', alignItems: 'center', gap: '8px', height: '36px', padding: '0 15px', background: accent, border: 'none', borderRadius: '8px', color: '#04121a', fontFamily: 'inherit', fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', flexShrink: 0 },
+
+      // tree
+      selectAll: () => this.selectFolder('all'),
+      totalCount: this.state.docs.length,
+      allRowStyle: {
+        display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 8px', borderRadius: '8px', cursor: 'pointer', userSelect: 'none', fontSize: '13.5px', fontWeight: 500, marginBottom: '2px',
+        color: st.selectedFolder === 'all' ? '#fff' : '#B8BAC0',
+        background: st.selectedFolder === 'all' ? accentSoft : 'transparent',
+        boxShadow: st.selectedFolder === 'all' ? ('inset 2px 0 0 ' + accent) : 'none',
+      },
+      allIconStyle: { width: '16px', height: '16px', flexShrink: 0, color: st.selectedFolder === 'all' ? accent : '#8A8C94' },
+      allCountStyle: { marginLeft: 'auto', fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: st.selectedFolder === 'all' ? accent : '#5C5E66' },
+      treeRows,
+
+      // subheader
+      browseMode: selCount === 0,
+      selectionMode: selCount > 0,
+      crumbs,
+      docCountLabel: visible.length + (visible.length === 1 ? ' document' : ' documents'),
+      selLabel: selCount + (selCount === 1 ? ' selected' : ' selected'),
+      canRename: selCount === 1,
+      bulkRename: () => this.startRename('doc', [...st.selectedDocs][0]),
+      bulkMove: () => this.openMoveDocs([...st.selectedDocs]),
+      bulkDownload: () => this.download(),
+      bulkDelete: () => this.openDeleteDocs([...st.selectedDocs]),
+      clearSelection: () => this.clearSelection(),
+
+      // table
+      rows,
+      allSelected,
+      toggleAll: () => this.toggleAll(),
+      headCbStyle: { width: '17px', height: '17px', borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: allSelected ? ('1px solid ' + accent) : '1px solid #3A3D44', background: allSelected ? accent : 'transparent' },
+      emptyState: visible.length === 0,
+      emptyTitle: st.search.trim() ? 'No documents match' : 'This folder is empty',
+      emptySub: st.search.trim() ? ('Nothing found for “' + st.search.trim() + '”. Try a different search.') : 'Upload a document or drop files here to get started.',
+
+      // shared edit
+      editValue: st.editValue,
+      onEditInput: (e) => this.setState({ editValue: e.target.value }),
+      onEditKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.commitRename(); } else if (e.key === 'Escape') { e.preventDefault(); this.setState({ editing: null }); } },
+      commitRename: () => this.commitRename(),
+      focusRef: this.focusRef,
+      stop: this.stop,
+
+      // context menu
+      menuOpen: !!st.menu,
+      menuStyle,
+      menuItems,
+
+      // modal
+      modalOpen: !!m,
+      modalTitle, modalSub, modalConfirmLabel, modalConfirmStyle,
+      modalHasInput, modalIsUpload, modalIsMove, modalPlaceholder,
+      modalValue: st.modalValue,
+      onModalInput: (e) => this.setState({ modalValue: e.target.value }),
+      onModalKey: (e) => { if (e.key === 'Enter' && modalHasInput) { e.preventDefault(); this.confirmModal(); } },
+      modalConfirm: () => this.confirmModal(),
+      closeModal: () => this.closeModal(),
+      uploadTypes, moveFolders,
+
+      // toast
+      toastOpen: !!st.toast,
+      toastMsg: st.toast || '',
+    };
+  }
+}
+</script>
+</body>
+</html>
