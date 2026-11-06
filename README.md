@@ -1,0 +1,1 @@
+Kontrolka współpracuje z przepływem PH_CreateMissingFolderStructureViaPCF
