@@ -1,0 +1,841 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "ag_sharedsharepointonline_d5d52"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "91a6861c-8f5b-4b25-8e16-0667f211c5a5"
+          },
+          "type": "Request",
+          "kind": "Http",
+          "inputs": {
+            "method": "POST",
+            "relativePath": "{Encja}/{Rok}/{Miesiac}/{Kod}",
+            "triggerAuthenticationType": "All"
+          }
+        }
+      },
+      "actions": {
+        "Condition_3": {
+          "actions": {
+            "Get_folder_metadata_using_path_2": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "62a8df8a-6749-42f5-911f-28c1cde96a15"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetFolderMetadataByPath",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                  "path": "/@{triggerOutputs()['relativePathParameters']['Encja']}/@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Condition_4": {
+              "actions": {
+                "Response_4": {
+                  "runAfter": {},
+                  "metadata": {
+                    "operationMetadataId": "883c59b2-9fe7-4612-be6f-c72b3016ac71"
+                  },
+                  "type": "Response",
+                  "kind": "Http",
+                  "inputs": {
+                    "statusCode": 200,
+                    "headers": {
+                      "Access-Control-Allow-Origin": "*"
+                    },
+                    "body": {
+                      "exists": true
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Get_folder_metadata_using_path_2": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              },
+              "else": {
+                "actions": {
+                  "Response_5": {
+                    "runAfter": {},
+                    "metadata": {
+                      "operationMetadataId": "9e4dc5cb-4dcb-4ef5-b83e-647bc45158a1"
+                    },
+                    "type": "Response",
+                    "kind": "Http",
+                    "inputs": {
+                      "statusCode": 200,
+                      "body": {
+                        "exists": false
+                      },
+                      "headers": {
+                        "Access-Control-Allow-Origin": "*"
+                      }
+                    }
+                  }
+                }
+              },
+              "expression": {
+                "equals": [
+                  "@outputs('Get_folder_metadata_using_path_2')?['statusCode']",
+                  200
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "b46f35d8-1955-4fe0-8f2f-aa84651036d6"
+              },
+              "type": "If"
+            }
+          },
+          "runAfter": {},
+          "else": {
+            "actions": {
+              "Get_folder_metadata_using_path": {
+                "runAfter": {},
+                "metadata": {
+                  "operationMetadataId": "62a8df8a-6749-42f5-911f-28c1cde96a15"
+                },
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "connectionName": "shared_sharepointonline",
+                    "operationId": "GetFolderMetadataByPath",
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                  },
+                  "parameters": {
+                    "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                    "path": "/@{triggerOutputs()['relativePathParameters']['Encja']}/@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}"
+                  },
+                  "authentication": "@parameters('$authentication')"
+                }
+              },
+              "Condition": {
+                "actions": {
+                  "Response": {
+                    "runAfter": {},
+                    "metadata": {
+                      "operationMetadataId": "1a6b7d72-de13-49d8-aace-156c5d655e3b"
+                    },
+                    "type": "Response",
+                    "kind": "Http",
+                    "inputs": {
+                      "statusCode": 200,
+                      "headers": {
+                        "Access-Control-Allow-Origin": "*"
+                      }
+                    }
+                  }
+                },
+                "runAfter": {
+                  "Get_folder_metadata_using_path": [
+                    "Succeeded",
+                    "Failed"
+                  ]
+                },
+                "else": {
+                  "actions": {
+                    "Condition_2": {
+                      "actions": {
+                        "Create_new_folder_2": {
+                          "runAfter": {},
+                          "metadata": {
+                            "operationMetadataId": "0a648a0a-cda9-4142-8cc9-9a817177aa1e"
+                          },
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_sharepointonline",
+                              "operationId": "CreateNewFolder",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                            },
+                            "parameters": {
+                              "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                              "table": "a1e46c46-797c-4918-bcee-f78f71dcf7d8",
+                              "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          }
+                        },
+                        "Create_new_folder": {
+                          "runAfter": {
+                            "Create_new_folder_2": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "846e4dcc-b26a-415e-9957-137b74bfa2f1"
+                          },
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_sharepointonline",
+                              "operationId": "CreateNewFolder",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                            },
+                            "parameters": {
+                              "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                              "table": "a1e46c46-797c-4918-bcee-f78f71dcf7d8",
+                              "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Dokumentacja powykonawcza"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          }
+                        },
+                        "Create_new_folder_3": {
+                          "runAfter": {
+                            "Create_new_folder": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "7caee077-c793-4761-8c28-8c1696c68ca5"
+                          },
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_sharepointonline",
+                              "operationId": "CreateNewFolder",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                            },
+                            "parameters": {
+                              "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                              "table": "a1e46c46-797c-4918-bcee-f78f71dcf7d8",
+                              "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Dokumentacja wykonawcza"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          }
+                        },
+                        "Create_new_folder_4": {
+                          "runAfter": {
+                            "Create_new_folder_3": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "02504373-3349-4336-b2b6-3eeb3641f334"
+                          },
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_sharepointonline",
+                              "operationId": "CreateNewFolder",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                            },
+                            "parameters": {
+                              "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                              "table": "a1e46c46-797c-4918-bcee-f78f71dcf7d8",
+                              "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Montażysta"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          }
+                        },
+                        "Create_new_folder_5": {
+                          "runAfter": {
+                            "Create_new_folder_4": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "ed0ff63a-34b6-4c96-be36-0d144a832818"
+                          },
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_sharepointonline",
+                              "operationId": "CreateNewFolder",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                            },
+                            "parameters": {
+                              "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                              "table": "a1e46c46-797c-4918-bcee-f78f71dcf7d8",
+                              "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Teczka kontraktu"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          }
+                        },
+                        "Scope": {
+                          "actions": {
+                            "Create_new_folder_6": {
+                              "runAfter": {},
+                              "metadata": {
+                                "operationMetadataId": "4ed0878e-85bb-4974-b8da-4b121f6f170d"
+                              },
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "host": {
+                                  "connectionName": "shared_sharepointonline",
+                                  "operationId": "CreateNewFolder",
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                },
+                                "parameters": {
+                                  "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                  "table": "a1e46c46-797c-4918-bcee-f78f71dcf7d8",
+                                  "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Teczka kontraktu/Do potwierdzenia"
+                                },
+                                "authentication": "@parameters('$authentication')"
+                              }
+                            },
+                            "Create_new_folder_7": {
+                              "runAfter": {
+                                "Create_new_folder_6": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "metadata": {
+                                "operationMetadataId": "e798c2b8-5791-47d1-95e8-5869a3963ac2"
+                              },
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "host": {
+                                  "connectionName": "shared_sharepointonline",
+                                  "operationId": "CreateNewFolder",
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                },
+                                "parameters": {
+                                  "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                  "table": "a1e46c46-797c-4918-bcee-f78f71dcf7d8",
+                                  "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Teczka kontraktu/Maile"
+                                },
+                                "authentication": "@parameters('$authentication')"
+                              }
+                            },
+                            "Create_new_folder_8": {
+                              "runAfter": {
+                                "Create_new_folder_7": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "metadata": {
+                                "operationMetadataId": "5bb274c8-be87-467c-a9b5-e96c3624d6d1"
+                              },
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "host": {
+                                  "connectionName": "shared_sharepointonline",
+                                  "operationId": "CreateNewFolder",
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                },
+                                "parameters": {
+                                  "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                  "table": "a1e46c46-797c-4918-bcee-f78f71dcf7d8",
+                                  "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Teczka kontraktu/Oferty"
+                                },
+                                "authentication": "@parameters('$authentication')"
+                              }
+                            }
+                          },
+                          "runAfter": {
+                            "Create_new_folder_5": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "3a0fae1f-217c-446a-89c1-3c4820d5078c"
+                          },
+                          "type": "Scope"
+                        },
+                        "Create_new_folder_9": {
+                          "runAfter": {
+                            "Scope": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "a1030bd4-de73-47e9-893a-69df7c8a923b"
+                          },
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_sharepointonline",
+                              "operationId": "CreateNewFolder",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                            },
+                            "parameters": {
+                              "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                              "table": "a1e46c46-797c-4918-bcee-f78f71dcf7d8",
+                              "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Zamawiający"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          }
+                        },
+                        "Create_new_folder_10": {
+                          "runAfter": {
+                            "Create_new_folder_9": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "f40fe3cf-1bb0-41fc-b4a2-4d6d9d52ecc7"
+                          },
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_sharepointonline",
+                              "operationId": "CreateNewFolder",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                            },
+                            "parameters": {
+                              "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                              "table": "a1e46c46-797c-4918-bcee-f78f71dcf7d8",
+                              "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Zdjęcia"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          }
+                        },
+                        "Create_new_folder_11": {
+                          "runAfter": {
+                            "Create_new_folder_10": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "f7f6b6fb-912b-45fe-8554-85728160cb9e"
+                          },
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_sharepointonline",
+                              "operationId": "CreateNewFolder",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                            },
+                            "parameters": {
+                              "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                              "table": "a1e46c46-797c-4918-bcee-f78f71dcf7d8",
+                              "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/ZS"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          }
+                        },
+                        "Response_2": {
+                          "runAfter": {
+                            "Create_new_folder_11": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "6912898a-f1d7-453d-80f1-ecb993da4f43"
+                          },
+                          "type": "Response",
+                          "kind": "Http",
+                          "inputs": {
+                            "statusCode": 200,
+                            "headers": {
+                              "Access-Control-Allow-Origin": "*"
+                            }
+                          }
+                        }
+                      },
+                      "runAfter": {},
+                      "else": {
+                        "actions": {
+                          "Condition_Projekty": {
+                            "actions": {
+                              "Create_project_folder": {
+                                "metadata": {
+                                  "operationMetadataId": "4044305f-96c3-45ae-a35a-278b51d473d3"
+                                },
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                  "host": {
+                                    "connectionName": "shared_sharepointonline",
+                                    "operationId": "CreateNewFolder",
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                  },
+                                  "parameters": {
+                                    "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                    "table": "c24b9307-e95a-4f4e-8e4e-2914b72a99e0",
+                                    "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}"
+                                  },
+                                  "authentication": "@parameters('$authentication')"
+                                },
+                                "runAfter": {}
+                              },
+                              "Create_project_folder_2": {
+                                "metadata": {
+                                  "operationMetadataId": "bac89a21-e5d2-49c6-9ff4-c8fa5b6256c5"
+                                },
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                  "host": {
+                                    "connectionName": "shared_sharepointonline",
+                                    "operationId": "CreateNewFolder",
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                  },
+                                  "parameters": {
+                                    "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                    "table": "c24b9307-e95a-4f4e-8e4e-2914b72a99e0",
+                                    "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Rysunki konstrukcyjne"
+                                  },
+                                  "authentication": "@parameters('$authentication')"
+                                },
+                                "runAfter": {
+                                  "Create_project_folder": [
+                                    "Succeeded"
+                                  ]
+                                }
+                              },
+                              "Response_Project": {
+                                "runAfter": {
+                                  "Create_project_folder_2": [
+                                    "Succeeded"
+                                  ]
+                                },
+                                "metadata": {
+                                  "operationMetadataId": "93513663-a4ec-4ede-bdd3-b1e63c3bba0b"
+                                },
+                                "type": "Response",
+                                "kind": "Http",
+                                "inputs": {
+                                  "statusCode": 200,
+                                  "headers": {
+                                    "Access-Control-Allow-Origin": "*"
+                                  }
+                                }
+                              }
+                            },
+                            "runAfter": {},
+                            "else": {
+                              "actions": {
+                                "Create_new_folder_12": {
+                                  "runAfter": {},
+                                  "metadata": {
+                                    "operationMetadataId": "3ae0db63-2d11-41d6-8705-9da73872ab7b"
+                                  },
+                                  "type": "OpenApiConnection",
+                                  "inputs": {
+                                    "host": {
+                                      "connectionName": "shared_sharepointonline",
+                                      "operationId": "CreateNewFolder",
+                                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                    },
+                                    "parameters": {
+                                      "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                      "table": "610c2bbe-960a-4689-ac96-bc2c6864823b",
+                                      "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                  }
+                                },
+                                "Create_new_folder_13": {
+                                  "runAfter": {
+                                    "Create_new_folder_12": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "metadata": {
+                                    "operationMetadataId": "72cbe3f4-093a-4220-b921-ad1866b7931f"
+                                  },
+                                  "type": "OpenApiConnection",
+                                  "inputs": {
+                                    "host": {
+                                      "connectionName": "shared_sharepointonline",
+                                      "operationId": "CreateNewFolder",
+                                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                    },
+                                    "parameters": {
+                                      "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                      "table": "610c2bbe-960a-4689-ac96-bc2c6864823b",
+                                      "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Do potwierdzenia"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                  }
+                                },
+                                "Create_new_folder_14": {
+                                  "runAfter": {
+                                    "Create_new_folder_13": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "metadata": {
+                                    "operationMetadataId": "bc299b43-8feb-4e2d-8d10-207bfef0587d"
+                                  },
+                                  "type": "OpenApiConnection",
+                                  "inputs": {
+                                    "host": {
+                                      "connectionName": "shared_sharepointonline",
+                                      "operationId": "CreateNewFolder",
+                                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                    },
+                                    "parameters": {
+                                      "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                      "table": "610c2bbe-960a-4689-ac96-bc2c6864823b",
+                                      "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Dokumentacja techniczna"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                  }
+                                },
+                                "Create_new_folder_15": {
+                                  "runAfter": {
+                                    "Create_new_folder_14": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "metadata": {
+                                    "operationMetadataId": "19eb607f-e3ca-4d08-874a-d4f3431a276a"
+                                  },
+                                  "type": "OpenApiConnection",
+                                  "inputs": {
+                                    "host": {
+                                      "connectionName": "shared_sharepointonline",
+                                      "operationId": "CreateNewFolder",
+                                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                    },
+                                    "parameters": {
+                                      "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                      "table": "610c2bbe-960a-4689-ac96-bc2c6864823b",
+                                      "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Informacje istotne"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                  }
+                                },
+                                "Create_new_folder_16": {
+                                  "runAfter": {
+                                    "Create_new_folder_15": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "metadata": {
+                                    "operationMetadataId": "2f8d9942-7148-4637-878e-f70ee55bd715"
+                                  },
+                                  "type": "OpenApiConnection",
+                                  "inputs": {
+                                    "host": {
+                                      "connectionName": "shared_sharepointonline",
+                                      "operationId": "CreateNewFolder",
+                                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                    },
+                                    "parameters": {
+                                      "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                      "table": "610c2bbe-960a-4689-ac96-bc2c6864823b",
+                                      "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Maile"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                  }
+                                },
+                                "Create_new_folder_17": {
+                                  "runAfter": {
+                                    "Create_new_folder_16": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "metadata": {
+                                    "operationMetadataId": "8a783e06-46a1-4dfb-97a8-93a5867bd932"
+                                  },
+                                  "type": "OpenApiConnection",
+                                  "inputs": {
+                                    "host": {
+                                      "connectionName": "shared_sharepointonline",
+                                      "operationId": "CreateNewFolder",
+                                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                    },
+                                    "parameters": {
+                                      "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                      "table": "610c2bbe-960a-4689-ac96-bc2c6864823b",
+                                      "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Oferty"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                  }
+                                },
+                                "Create_new_folder_18": {
+                                  "runAfter": {
+                                    "Create_new_folder_17": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "metadata": {
+                                    "operationMetadataId": "404ebb0a-3fc7-453f-80b2-8249b0d85ca9"
+                                  },
+                                  "type": "OpenApiConnection",
+                                  "inputs": {
+                                    "host": {
+                                      "connectionName": "shared_sharepointonline",
+                                      "operationId": "CreateNewFolder",
+                                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                    },
+                                    "parameters": {
+                                      "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                      "table": "610c2bbe-960a-4689-ac96-bc2c6864823b",
+                                      "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Rozszerzenie zakresu"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                  }
+                                },
+                                "Create_new_folder_19": {
+                                  "runAfter": {
+                                    "Create_new_folder_18": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "metadata": {
+                                    "operationMetadataId": "f486d714-20f1-491d-972e-17e954cefef9"
+                                  },
+                                  "type": "OpenApiConnection",
+                                  "inputs": {
+                                    "host": {
+                                      "connectionName": "shared_sharepointonline",
+                                      "operationId": "CreateNewFolder",
+                                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                    },
+                                    "parameters": {
+                                      "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                      "table": "610c2bbe-960a-4689-ac96-bc2c6864823b",
+                                      "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Umowy"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                  }
+                                },
+                                "Create_new_folder_20": {
+                                  "runAfter": {
+                                    "Create_new_folder_19": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "metadata": {
+                                    "operationMetadataId": "d8d43a82-14c0-4ee6-8b3f-d703ecee9920"
+                                  },
+                                  "type": "OpenApiConnection",
+                                  "inputs": {
+                                    "host": {
+                                      "connectionName": "shared_sharepointonline",
+                                      "operationId": "CreateNewFolder",
+                                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                    },
+                                    "parameters": {
+                                      "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                      "table": "610c2bbe-960a-4689-ac96-bc2c6864823b",
+                                      "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Zapytania"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                  }
+                                },
+                                "Create_new_folder_21": {
+                                  "runAfter": {
+                                    "Create_new_folder_20": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "metadata": {
+                                    "operationMetadataId": "8c83900d-cc66-452d-8ec2-aba32b03e656"
+                                  },
+                                  "type": "OpenApiConnection",
+                                  "inputs": {
+                                    "host": {
+                                      "connectionName": "shared_sharepointonline",
+                                      "operationId": "CreateNewFolder",
+                                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                    },
+                                    "parameters": {
+                                      "dataset": "https://assaabloyeur.sharepoint.com/sites/EMEIA-EEC-PL-MM-DOCUMENTS",
+                                      "table": "610c2bbe-960a-4689-ac96-bc2c6864823b",
+                                      "parameters/path": "@{triggerOutputs()['relativePathParameters']['Rok']}/@{triggerOutputs()['relativePathParameters']['Miesiac']}/@{triggerOutputs()['relativePathParameters']['Kod']}/Zdjęcia"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                  }
+                                },
+                                "Response_3": {
+                                  "runAfter": {
+                                    "Create_new_folder_21": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "metadata": {
+                                    "operationMetadataId": "5cb49c24-cd52-46c9-be60-d26c612675c2"
+                                  },
+                                  "type": "Response",
+                                  "kind": "Http",
+                                  "inputs": {
+                                    "statusCode": 200,
+                                    "headers": {
+                                      "Access-Control-Allow-Origin": "*"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "expression": {
+                              "equals": [
+                                "@triggerOutputs()['relativePathParameters']['Encja']",
+                                "projekty"
+                              ]
+                            },
+                            "metadata": {
+                              "operationMetadataId": "28ed8e67-92f8-4e39-bf9f-ee37f959acb5"
+                            },
+                            "type": "If"
+                          }
+                        }
+                      },
+                      "expression": {
+                        "equals": [
+                          "@triggerOutputs()['relativePathParameters']['Encja']",
+                          "kontrakty"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "b7450560-462a-49f6-ab5e-5082758655c4"
+                      },
+                      "type": "If"
+                    }
+                  }
+                },
+                "expression": {
+                  "equals": [
+                    "@outputs('Get_folder_metadata_using_path')?['statusCode']",
+                    200
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "075b8d3e-005b-427a-9e3f-5140a5b6c0a2"
+                },
+                "type": "If"
+              }
+            }
+          },
+          "expression": {
+            "equals": [
+              "@triggerOutputs()?['queries']?['mode']",
+              "check"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "0c01db21-0382-412f-b58c-5e827b228257"
+          },
+          "type": "If"
+        }
+      }
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}

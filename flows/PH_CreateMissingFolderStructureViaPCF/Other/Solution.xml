@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml version="9.2.26101.177" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26101.177" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26101.00177">
+  <SolutionManifest>
+    <UniqueName>DocumentBrowserFlowExport</UniqueName>
+    <LocalizedNames>
+      <LocalizedName description="Document Browser flow export" languagecode="1033" />
+      <LocalizedName description="Document Browser flow export" languagecode="1045" />
+    </LocalizedNames>
+    <Descriptions />
+    <Version>1.0.0.0</Version>
+    <Managed>0</Managed>
+    <Publisher>
+      <UniqueName>Aggia</UniqueName>
+      <LocalizedNames>
+        <LocalizedName description="Aggia" languagecode="1033" />
+        <LocalizedName description="Aggia" languagecode="1045" />
+      </LocalizedNames>
+      <Descriptions />
+      <EMailAddress xsi:nil="true"></EMailAddress>
+      <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
+      <CustomizationPrefix>ag</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>51766</CustomizationOptionValuePrefix>
+      <Addresses />
+    </Publisher>
+    <RootComponents>
+      <RootComponent type="29" id="{6ffc7315-31c6-f111-aaaf-0022489ff676}" behavior="0" />
+    </RootComponents>
+    <MissingDependencies />
+  </SolutionManifest>
+</ImportExportXml>
