@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="Aggia.Controls" constructor="DocumentBrowser" version="0.0.8" display-name-key="DocumentBrowser" description-key="DocumentBrowser description" control-type="virtual" >
+  <control namespace="Aggia.Controls" constructor="DocumentBrowser" version="0.0.15" display-name-key="DocumentBrowser" description-key="DocumentBrowser description" control-type="virtual" >
     <external-service-usage enabled="true">
       <domain>sharepoint.com</domain>
+      <domain>powerplatform.com</domain>
     </external-service-usage>
     <type-group name="sharePointUrlTypes">
       <type>SingleLine.URL</type>
@@ -10,6 +11,7 @@
     </type-group>
     <property name="sharePointFolderUrl" display-name-key="SharePointFolderUrl_Display_Key" description-key="SharePointFolderUrl_Desc_Key" of-type-group="sharePointUrlTypes" usage="bound" required="true" default-value="https://certigoneu.sharepoint.com/sites/Projekty/crd2e_projekty/Forms/AllItems.aspx?id=%2Fsites%2FProjekty%2Fcrd2e%5Fprojekty%2FWEW%5FTAURI%5FTODO&amp;viewid=19e5130d%2Db89b%2D4fdc%2D8244%2D198d4bbaa3df" />
     <property name="viewerHeight" display-name-key="ViewerHeight_Display_Key" description-key="ViewerHeight_Desc_Key" of-type="Whole.None" usage="input" required="false" default-value="600" />
+    <property name="provisionFlowUrl" display-name-key="ProvisionFlowUrl_Display_Key" description-key="ProvisionFlowUrl_Desc_Key" of-type="SingleLine.TextArea" usage="input" required="false" />
     <resources>
       <code path="index.ts" order="1"/>
       <platform-library name="React" version="16.14.0" />

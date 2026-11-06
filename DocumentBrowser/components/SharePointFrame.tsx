@@ -8,16 +8,45 @@ import {
   MessageBarActions,
   MessageBarBody,
   MessageBarTitle,
+  Spinner,
   Subtitle2,
+  Title3,
   tokens,
 } from "@fluentui/react-components";
 import { FolderIcon } from "./FolderIcon";
 import { isIframeEmbeddingLikelyBlocked } from "../utils/hostEnvironment";
+import { FolderPresence } from "../utils/folderProvision";
 
 export interface ISharePointFrameProps {
   src: string | null;
   placeholderTitle?: string;
   placeholderSub?: string;
+  creating?: boolean;
+  createError?: string | null;
+  onCreate?: () => void;
+  presence?: FolderPresence;
+  folderCode?: string;
+  frameKey?: string;
+}
+
+type FolderView = "checking" | "missing" | "preview" | "preview-with-button";
+
+function resolveFolderView(presence: FolderPresence, canCreate: boolean): FolderView {
+  switch (presence) {
+    case "checking":
+      return "checking";
+    case "missing":
+      return "missing";
+    case "unknown":
+      return canCreate ? "preview-with-button" : "preview";
+    case "idle":
+    case "present":
+      return "preview";
+    default: {
+      const unreachable: never = presence;
+      return unreachable;
+    }
+  }
 }
 
 const useStyles = makeStyles({
@@ -71,8 +100,50 @@ const useStyles = makeStyles({
     maxWidth: "420px",
     color: tokens.colorNeutralForeground3,
   },
+  notice: {
+    width: "min(440px, 100%)",
+    boxSizing: "border-box",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: tokens.spacingVerticalL,
+    padding: "28px 28px 24px",
+    textAlign: "left",
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusXLarge,
+    backgroundColor: tokens.colorNeutralBackground1,
+  },
+  noticeMark: {
+    width: "40px",
+    height: "40px",
+    borderRadius: tokens.borderRadiusLarge,
+    backgroundColor: tokens.colorNeutralBackground3,
+    color: tokens.colorNeutralForeground2,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  noticeCopy: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: tokens.spacingVerticalXS,
+  },
+  noticeEyebrow: {
+    color: tokens.colorNeutralForeground3,
+  },
+  noticeBody: {
+    color: tokens.colorNeutralForeground2,
+  },
   messageBar: {
     flexShrink: 0,
+  },
+  toolbar: {
+    flexShrink: 0,
+    display: "flex",
+    justifyContent: "flex-end",
+    padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalM}`,
+    borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
   },
 });
 
@@ -80,6 +151,12 @@ export const SharePointFrame: React.FC<ISharePointFrameProps> = ({
   src,
   placeholderTitle = "SharePoint not configured",
   placeholderSub = "Bind a SharePoint folder URL field or paste a folder URL in the test harness.",
+  creating = false,
+  createError = null,
+  onCreate,
+  presence = "idle",
+  folderCode = "",
+  frameKey,
 }) => {
   const styles = useStyles();
   const embedBlocked = isIframeEmbeddingLikelyBlocked();
@@ -110,9 +187,72 @@ export const SharePointFrame: React.FC<ISharePointFrameProps> = ({
     );
   }
 
+  const folderView = resolveFolderView(presence, Boolean(onCreate));
+
+  if (src && folderView === "checking") {
+    return (
+      <div className={styles.host}>
+        <div className={styles.empty}>
+          <Spinner size="large" label="Sprawdzanie folderu" />
+        </div>
+      </div>
+    );
+  }
+
+  if (src && folderView === "missing" && onCreate) {
+    return (
+      <div className={styles.host}>
+        {createError ? (
+          <MessageBar intent="error" className={styles.messageBar}>
+            <MessageBarBody>
+              <MessageBarTitle>Nie udało się utworzyć struktury</MessageBarTitle>
+              {createError}
+            </MessageBarBody>
+          </MessageBar>
+        ) : null}
+        <div className={styles.empty}>
+          <div className={styles.notice}>
+            <div className={styles.noticeMark}>
+              <FolderIcon />
+            </div>
+            <div className={styles.noticeCopy}>
+              <Subtitle2 className={styles.noticeEyebrow}>Folder nie istnieje</Subtitle2>
+              {folderCode ? <Title3>{folderCode}</Title3> : null}
+              <Body1 className={styles.noticeBody}>
+                Ten rekord nie ma jeszcze folderu w bibliotece dokumentów. Przycisk utworzy folder rekordu razem z podfolderami.
+              </Body1>
+            </div>
+            <Button appearance="primary" disabled={creating} onClick={onCreate}>
+              {creating ? "Tworzenie struktury…" : "Utwórz strukturę"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const createBar = folderView === "preview-with-button" && onCreate ? (
+    <>
+      {createError ? (
+        <MessageBar intent="error" className={styles.messageBar}>
+          <MessageBarBody>
+            <MessageBarTitle>Nie udało się utworzyć struktury</MessageBarTitle>
+            {createError}
+          </MessageBarBody>
+        </MessageBar>
+      ) : null}
+      <div className={styles.toolbar}>
+        <Button appearance="primary" disabled={creating} onClick={onCreate}>
+          {creating ? "Tworzenie struktury…" : "Utwórz strukturę"}
+        </Button>
+      </div>
+    </>
+  ) : null;
+
   if (embedBlocked) {
     return (
       <div className={styles.host}>
+        {createBar}
         <MessageBar intent="info" className={styles.messageBar}>
           <MessageBarBody>
             <MessageBarTitle>Embedded preview unavailable on this host</MessageBarTitle>
@@ -145,8 +285,10 @@ export const SharePointFrame: React.FC<ISharePointFrameProps> = ({
 
   return (
     <div className={styles.host}>
+      {createBar}
       <div className={styles.frameWrap}>
         <iframe
+          key={frameKey ?? src}
           className={styles.frame}
           src={src}
           title="SharePoint document library"

@@ -7,9 +7,13 @@ export interface ISharePointConfig {
   placeholderSub: string;
 }
 
-function normalizeInput(value: string | null | undefined): string {
+export function readControlText(value: string | null | undefined): string {
   const trimmed = (value ?? "").trim();
   return trimmed === HARNESS_PLACEHOLDER ? "" : trimmed;
+}
+
+function normalizeInput(value: string | null | undefined): string {
+  return readControlText(value);
 }
 
 export function isValidSharePointFolderUrl(url: string): boolean {
@@ -95,5 +99,74 @@ export function getSharePointConfig(folderUrl: string): ISharePointConfig {
     src: normalized,
     placeholderTitle: "",
     placeholderSub: "",
+  };
+}
+
+const FOLDER_LIBRARIES = ["szansasprzedazy", "kontrakty", "projekty"] as const;
+
+export type FolderLibrary = (typeof FOLDER_LIBRARIES)[number];
+
+export interface IFolderProvisionTarget {
+  encja: FolderLibrary;
+  rok: string;
+  miesiac: string;
+  kod: string;
+}
+
+const SHARING_LINK_PATH = new RegExp(
+  `^/:f:/r/(?:sites|teams)/[^/]+/(${FOLDER_LIBRARIES.join("|")})/(\\d{4})/(\\d{2})/([^/]+)/?$`
+);
+
+function isFolderLibrary(value: string): value is FolderLibrary {
+  return FOLDER_LIBRARIES.some((library) => library === value);
+}
+
+function decodePathSegment(segment: string): string | null {
+  try {
+    const decoded = decodeURIComponent(segment).trim();
+    return decoded ? decoded : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Reads Encja, Rok, Miesiac and Kod from a stored `:f:/r/` sharing link.
+ * Returns null when the link is not one of the document libraries.
+ */
+export function parseFolderProvisionTarget(
+  raw: string | null | undefined
+): IFolderProvisionTarget | null {
+  const value = readControlText(raw);
+  if (!value) {
+    return null;
+  }
+
+  let pathname: string;
+  try {
+    pathname = new URL(value).pathname;
+  } catch {
+    return null;
+  }
+
+  const match = SHARING_LINK_PATH.exec(pathname);
+  if (!match) {
+    return null;
+  }
+
+  const library = match[1] ?? "";
+  const rok = match[2] ?? "";
+  const miesiac = match[3] ?? "";
+  const kod = decodePathSegment(match[4] ?? "");
+
+  if (!isFolderLibrary(library) || !kod) {
+    return null;
+  }
+
+  return {
+    encja: library,
+    rok,
+    miesiac,
+    kod,
   };
 }

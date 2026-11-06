@@ -64,6 +64,7 @@ export class DocumentBrowser implements ComponentFramework.ReactControl<IInputs,
   public updateView(context: ComponentFramework.Context<IInputs>): React.ReactElement {
     const props: IDocumentBrowserProps = {
       sharePointFolderUrl: context.parameters.sharePointFolderUrl.raw ?? "",
+      provisionFlowUrl: context.parameters.provisionFlowUrl.raw ?? "",
       containerStyle: getContainerStyle(context),
     };
 
